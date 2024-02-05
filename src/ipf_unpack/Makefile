@@ -1,4 +1,3 @@
-
 TARGET := ipf_unpack
 
 SRCEXT   := c
@@ -14,8 +13,16 @@ INCLUDES := -I. \
 			-I$(INCPATH) \
 			-I$(COMMON_DIR)
 
+# C compiler
+AR=${CROSS_COMPILE}ar
+AS=${CROSS_COMPILE}as
+LD=${CROSS_COMPILE}ld
+CC=$(CROSS_COMPILE)gcc
+CXX=$(CROSS_COMPILE)g++
+NM=${CROSS_COMPILE}nm
+RANLIB=${CROSS_COMPILE}ranlib
 # C compiler flag
-CFLAGS := -D_GNU_SOURCE -D__DBG_ACTIVATED__ -Wall $(INCLUDES) -c -Wno-strict-aliasing
+CFLAGS := -D_GNU_SOURCE -D__DBG_ACTIVATED__ -Wall $(INCLUDES) -c -Wno-strict-aliasing -Wall
 
 # Linker library flags
 LIBDIRS  := -L$(API_DIR)/lib
@@ -49,13 +56,13 @@ $(BINDIR)/$(TARGET): buildrepo $(OBJS)
 	@mkdir -p `dirname $@`
 	@echo -e "\033[1;34mLinking '$@'\033[0m"
 	@$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
-	@echo -e "\033[1;32m ---> '$(TARGET)' sucessfully built !\033[0m"
+	@echo -e "\033[1;32m ---> '$(TARGET)' successfully built !\033[0m"
 
 $(BIN_DEBUGDIR)/$(TARGET): buildrepo $(OBJS)
 	@mkdir -p `dirname $@`
 	@echo -e "\033[1;34mLinking '$@'\033[0m"
 	@$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
-	@echo -e "\033[1;32m ---> '$(TARGET)' sucessfully built !\033[0m"
+	@echo -e "\033[1;32m ---> '$(TARGET)' successfully built !\033[0m"
 
 $(OBJDIR)/%.o: %.$(SRCEXT)
 	@$(call make-depend,$<,$@,$(subst .o,.dep,$@))
@@ -88,6 +95,6 @@ define make-depend
 		-MP	   \
 		-MT $2	\
 		$(CFLAGS) \
-		$(LDFLAGS) \
+		$(INCLUDES) \
 		$1
 endef

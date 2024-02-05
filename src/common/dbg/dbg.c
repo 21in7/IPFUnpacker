@@ -166,12 +166,20 @@ void printTrace(void) {
 void crashHandler(int sig, siginfo_t *siginfo, void *_context) {
     int exceptionCode = siginfo->si_errno;
     ucontext_t *context = (ucontext_t*) _context;
-    uintptr_t ip = context->uc_mcontext.gregs[REG_RIP];
+    uintptr_t ip;
+
+    #if defined(__arm__)
+    ip = context->uc_mcontext.arm_pc;
+    #elif defined(__aarch64__)
+    ip = context->uc_mcontext.pc;
+    #else
+    ip = context->uc_mcontext.gregs[REG_RIP];
+    #endif
 
     if (sig == SIGABRT) {
         printTrace();
     }
 
-    die("Application crashed at %p. Exception code = %x", ip, exceptionCode);
+    die("Application crashed at %p. Exception code = %x", (void *)ip, exceptionCode);
 }
 #endif
