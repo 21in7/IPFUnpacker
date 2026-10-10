@@ -115,7 +115,14 @@ static bool process_ies (IesTable *table, void *userdata)
 
                 case 1:
                 case 2: {
-                    fprintf (output, "\"%s\"", cell->str.value);
+                    fputc ('"', output);
+                    for (const char *value = cell->str.value; *value; value++) {
+                        if (*value == '"') {
+                            fputc ('"', output);
+                        }
+                        fputc (*value, output);
+                    }
+                    fputc ('"', output);
                     if (cellId != row->cellsCount - 1) {
                         fprintf (output, ",");
                     }

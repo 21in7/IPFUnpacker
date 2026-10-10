@@ -1,0 +1,26 @@
+name: Native unpacker
+
+on:
+  push:
+    branches: [master, 'codex/**']
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  native-csv:
+    name: Native CSV regression
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Install native build dependencies
+        run: sudo apt-get update && sudo apt-get install -y gcc make zlib1g-dev
+      - name: Build unpacker
+        run: make
+      - name: Verify IES CSV export
+        run: python3 -m unittest discover -s tests -v
