@@ -2,3 +2,7 @@
 *.dll
 *.dep
 *.o
+
+# Local native build outputs
+/ipf_unpack
+*.o
