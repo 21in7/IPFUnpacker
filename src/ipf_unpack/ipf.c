@@ -55,7 +55,8 @@ bool ipf_read (uint8_t *ipf, size_t size, IpfCallback callback, void *userdata)
 
     size_t tableBegin = header.filetableOffset;
     size_t tableEnd = header.filefooterOffset;
-    if (tableBegin > tableEnd || tableEnd != size - sizeof(header)) {
+    size_t footerBegin = size - sizeof(header);
+    if (tableBegin > tableEnd || tableEnd > footerBegin) {
         error ("Invalid IPF file table bounds.");
         return false;
     }
@@ -91,6 +92,32 @@ bool ipf_read (uint8_t *ipf, size_t size, IpfCallback callback, void *userdata)
     if ((uint16_t) count != header.fileCount) {
         error ("IPF file count does not match its complete table.");
         return false;
+    }
+
+    // Some archives place a counted name list between the table and footer.
+    // Its meaning is unknown: validate it, but never invoke callbacks for it.
+    // An empty interval retains the legacy behavior regardless of header.unk.
+    if (tableEnd < footerBegin) {
+        size_t cursor = tableEnd;
+        for (size_t index = 0; index < header.unk; index++) {
+            if (footerBegin - cursor < 4) {
+                error ("Truncated IPF name list entry.");
+                return false;
+            }
+            size_t archiveLength = (size_t) ipf[cursor] | ((size_t) ipf[cursor + 1] << 8);
+            size_t filenameLength = (size_t) ipf[cursor + 2] | ((size_t) ipf[cursor + 3] << 8);
+            cursor += 4;
+            size_t namesSize = archiveLength + filenameLength;
+            if (namesSize > footerBegin - cursor) {
+                error ("Invalid IPF name list lengths.");
+                return false;
+            }
+            cursor += namesSize;
+        }
+        if (cursor != footerBegin) {
+            error ("IPF name list does not end at the footer.");
+            return false;
+        }
     }
 
     for (size_t cursor = tableBegin; cursor < tableEnd; ) {
